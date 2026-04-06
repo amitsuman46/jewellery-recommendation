@@ -1,0 +1,20 @@
+{
+  "name": "outfit-recommendation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jewelry outfit recommendation POC — React + Fastify + Gemini",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev -w apps/web\" \"npm run dev -w apps/api\"",
+    "build": "npm run build -w apps/web && npm run build -w apps/api",
+    "import-data": "node scripts/import-xlsx.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3",
+    "xlsx": "^0.18.5"
+  }
+}
