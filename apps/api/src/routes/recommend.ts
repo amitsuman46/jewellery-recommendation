@@ -107,6 +107,8 @@ export async function recommendRoutes(app: FastifyInstance) {
         return {
           image_index: oa.image_index,
           outfit_description: oa.outfit_description,
+          ethnic_jewelry_match: oa.ethnic_jewelry_match !== false,
+          ethnic_match_note: oa.ethnic_match_note,
           rankings_by_category: byCat,
         };
       }),

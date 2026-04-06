@@ -17,9 +17,17 @@ function buildPrompt(allowedIds: string[], catalog: JewelryItem[]): string {
   const block = catalogPromptBlock(catalog);
   const cats = categoriesInCatalog(catalog);
   const catList = cats.join(", ");
-  return `You are a jewelry stylist. The user uploaded one or more photos of themselves wearing outfits.
+  return `You are a jewelry stylist for a store that sells INDIAN ETHNIC jewelry only (necklaces, earrings, bracelets in traditional/festive Indian styles).
 
-You MUST recommend ONLY jewelry pieces from this inventory (use the exact "id" field). Do not invent IDs.
+The user uploaded one or more photos of themselves wearing outfits.
+
+CRITICAL — When NOT to recommend anything:
+- If the outfit is clearly WESTERN (e.g. jeans and t-shirt, western dress, office western wear, sportswear, generic party dress with no Indian ethnic context), or otherwise NOT a good context for Indian ethnic jewelry, you MUST NOT recommend any pieces.
+- In that case set "ethnic_jewelry_match": false, use empty object {} for "rankings_by_category", and set "ethnic_match_note" to a brief, polite one-sentence explanation (e.g. that this catalog is for Indian ethnic occasions and the outfit reads as western/casual western).
+
+When TO recommend (ethnic_jewelry_match: true):
+- Outfits that fit Indian ethnic styling: saree, lehenga, salwar kameez, kurta sets, indo-western with clear ethnic elements, festive/traditional Indian occasion wear, or similar.
+- Then recommend ONLY from this inventory (exact "id" field). Do not invent IDs.
 
 INVENTORY:
 ${block}
@@ -28,9 +36,7 @@ Allowed jewelry_id values (exact strings): ${JSON.stringify(allowedIds)}
 
 Categories present in this inventory: ${catList}
 
-For EACH uploaded image in order (first image = index 0, second = index 1, ...), analyze the outfit (colors, neckline, formality, cultural context if visible).
-
-For EACH category that appears in the inventory (${catList}), pick at most the TOP ${TOP_N} best-matching items for that outfit. Within each category, rank 1 = best, 2 = second, 3 = third. Do not list more than ${TOP_N} items per category.
+For EACH uploaded image in order (first image = index 0, second = index 1, ...), first decide ethnic_jewelry_match, then if true, for EACH category in the inventory (${catList}) pick at most the TOP ${TOP_N} best-matching items. Within each category, rank 1 = best, 2 = second, 3 = third.
 - Prefer complementary or harmonious colors, appropriate formality, and neckline/wrist/ear visibility.
 - style_note: 1-2 sentences explaining why this piece works for THIS outfit.
 
@@ -42,6 +48,8 @@ Return ONLY valid JSON with this exact shape (no markdown):
     {
       "image_index": 0,
       "outfit_description": "short label of the outfit",
+      "ethnic_jewelry_match": true,
+      "ethnic_match_note": "optional short note",
       "rankings_by_category": {
         "necklace": [ { "rank": 1, "jewelry_id": "NCK-01", "style_note": "..." } ],
         "bracelet": [ { "rank": 1, "jewelry_id": "BR-01", "style_note": "..." } ]
@@ -50,7 +58,12 @@ Return ONLY valid JSON with this exact shape (no markdown):
   ]
 }
 
-Use only these category keys as needed: "necklace", "earring", "bracelet" — include a key only when that category exists in the inventory above.
+If ethnic_jewelry_match is false, use:
+"ethnic_jewelry_match": false,
+"ethnic_match_note": "one sentence reason",
+"rankings_by_category": {}
+
+Use only these category keys as needed: "necklace", "earring", "bracelet" — only when ethnic_jewelry_match is true and that category exists in the inventory.
 
 Include one outfit_analysis entry per uploaded image. image_index must be 0,1,2,... in order matching upload order.`;
 }
@@ -131,6 +144,17 @@ function normalizeOutfitAnalysis(
   idToItem: Map<string, JewelryItem>
 ): void {
   const cats: JewelryCategory[] = ["necklace", "earring", "bracelet"];
+
+  if (oa.ethnic_jewelry_match === false) {
+    oa.rankings_by_category = {};
+    delete (oa as { rankings?: unknown }).rankings;
+    if (!oa.ethnic_match_note?.trim()) {
+      oa.ethnic_match_note =
+        "This outfit does not match the Indian ethnic style for this catalog.";
+    }
+    return;
+  }
+
   let byCat: Partial<Record<JewelryCategory, RankingRow[]>> = {};
 
   const raw = oa.rankings_by_category;

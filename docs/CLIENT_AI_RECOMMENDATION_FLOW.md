@@ -103,6 +103,8 @@ flowchart TD
     {
       "image_index": 0,
       "outfit_description": "Short label of the outfit",
+      "ethnic_jewelry_match": true,
+      "ethnic_match_note": "Optional note; required context when match is false",
       "rankings_by_category": {
         "necklace": [
           {
@@ -128,6 +130,8 @@ flowchart TD
 
 **Notes for the client**
 
+- **Indian ethnic catalog:** If the outfit is assessed as **western / not suited** to Indian ethnic jewelry, the API returns `ethnic_jewelry_match: false`, `ethnic_match_note` with a short explanation, and **empty** `rankings_by_category` (`{}`). No product recommendations in that case.
+- When `ethnic_jewelry_match` is true, behavior matches the previous contract.
 - `rankings_by_category` may include only keys that exist in the **filtered** catalog (e.g. no `earring` if user excluded earrings).
 - Each array has **at most 3** items; `rank` is **1–3 within that category**.
 - `product` is attached server-side for display; **IDs** match catalog for future Firestore or e‑commerce integration.

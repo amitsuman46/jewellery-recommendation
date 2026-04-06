@@ -29,6 +29,8 @@ interface Ranking {
 interface OutfitBlock {
   image_index: number;
   outfit_description: string;
+  ethnic_jewelry_match?: boolean;
+  ethnic_match_note?: string;
   rankings_by_category: Partial<Record<Category, Ranking[]>>;
 }
 
@@ -340,48 +342,60 @@ export default function App() {
                           </div>
                         )}
                         <div className="min-w-0 flex-1 space-y-8 text-left">
-                          {(["necklace", "earring", "bracelet"] as const).map(
-                            (catKey) => {
-                              const rows = oa.rankings_by_category?.[catKey];
-                              if (!rows?.length) return null;
-                              return (
-                                <div key={catKey}>
-                                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-                                    Top picks — {catKey}s
-                                  </h3>
-                                  <ol className="space-y-4">
-                                    {rows
-                                      .slice()
-                                      .sort((a, b) => a.rank - b.rank)
-                                      .map((r) => (
-                                        <li
-                                          key={`${catKey}-${r.jewelry_id}-${r.rank}`}
-                                          className="flex gap-4 border-t border-stone-100 pt-4 first:border-t-0 first:pt-0"
-                                        >
-                                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-800">
-                                            {r.rank}
-                                          </span>
-                                          <div className="min-w-0 flex-1">
-                                            {r.product?.imageUrl && (
-                                              <img
-                                                src={r.product.imageUrl}
-                                                alt=""
-                                                className="mb-3 h-36 w-36 rounded-lg object-cover"
-                                              />
-                                            )}
-                                            <p className="font-medium text-stone-900">
-                                              {r.product?.name ?? r.jewelry_id}
-                                            </p>
-                                            <p className="mt-1 text-sm text-stone-600">
-                                              {r.style_note}
-                                            </p>
-                                          </div>
-                                        </li>
-                                      ))}
-                                  </ol>
-                                </div>
-                              );
-                            }
+                          {oa.ethnic_jewelry_match === false ? (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-left text-amber-950">
+                              <p className="font-medium">No ethnic jewelry suggestions</p>
+                              <p className="mt-2 text-sm leading-relaxed opacity-90">
+                                {oa.ethnic_match_note ??
+                                  "Our catalog is Indian ethnic jewelry. This outfit does not fit that context."}
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              {(["necklace", "earring", "bracelet"] as const).map(
+                                (catKey) => {
+                                  const rows = oa.rankings_by_category?.[catKey];
+                                  if (!rows?.length) return null;
+                                  return (
+                                    <div key={catKey}>
+                                      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+                                        Top picks — {catKey}s
+                                      </h3>
+                                      <ol className="space-y-4">
+                                        {rows
+                                          .slice()
+                                          .sort((a, b) => a.rank - b.rank)
+                                          .map((r) => (
+                                            <li
+                                              key={`${catKey}-${r.jewelry_id}-${r.rank}`}
+                                              className="flex gap-4 border-t border-stone-100 pt-4 first:border-t-0 first:pt-0"
+                                            >
+                                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-800">
+                                                {r.rank}
+                                              </span>
+                                              <div className="min-w-0 flex-1">
+                                                {r.product?.imageUrl && (
+                                                  <img
+                                                    src={r.product.imageUrl}
+                                                    alt=""
+                                                    className="mb-3 h-36 w-36 rounded-lg object-cover"
+                                                  />
+                                                )}
+                                                <p className="font-medium text-stone-900">
+                                                  {r.product?.name ?? r.jewelry_id}
+                                                </p>
+                                                <p className="mt-1 text-sm text-stone-600">
+                                                  {r.style_note}
+                                                </p>
+                                              </div>
+                                            </li>
+                                          ))}
+                                      </ol>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
